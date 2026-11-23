@@ -1,0 +1,231 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user account profile for FinSight.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth user ID."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "User display name."
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 200,
+          "description": "User verified email address."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Optional profile avatar URL."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["uid", "displayName", "email", "createdAt", "updatedAt"]
+    },
+    "SavingsScenario": {
+      "title": "SavingsScenario",
+      "description": "A user's saved weekly peso micro-investment and rent-to-equity scenario.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Scenario name."
+        },
+        "weeklySavings": {
+          "type": "number",
+          "description": "Weekly peso contribution amount."
+        },
+        "initialDeposit": {
+          "type": "number",
+          "description": "Starting portfolio capital in PHP."
+        },
+        "benchmarkId": {
+          "type": "string",
+          "enum": ["sp500", "psei", "global60_40"],
+          "description": "Selected historical stock index benchmark."
+        },
+        "monthlyRent": {
+          "type": "number",
+          "description": "Current monthly rent payment in PHP."
+        },
+        "targetHomePrice": {
+          "type": "number",
+          "description": "Target home purchase price in PHP."
+        },
+        "downPaymentPercent": {
+          "type": "number",
+          "description": "Target down payment percentage."
+        },
+        "mortgageRate": {
+          "type": "number",
+          "description": "Annual mortgage interest rate percentage."
+        },
+        "rentGrowthRate": {
+          "type": "number",
+          "description": "Annual rent inflation percentage."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "weeklySavings",
+        "initialDeposit",
+        "benchmarkId",
+        "monthlyRent",
+        "targetHomePrice",
+        "downPaymentPercent",
+        "mortgageRate",
+        "rentGrowthRate",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SavingsLog": {
+      "title": "SavingsLog",
+      "description": "A recorded weekly peso savings deposit tied to a scenario.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "scenarioId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Referenced SavingsScenario document ID."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Deposited peso amount."
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 160,
+          "description": "Short note describing the weekly deposit."
+        },
+        "weekDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "ISO calendar date (YYYY-MM-DD)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": ["userId", "scenarioId", "amount", "note", "weekDate", "createdAt"]
+    },
+    "MilestoneAward": {
+      "title": "MilestoneAward",
+      "description": "Persisted savings milestone badge unlocked by a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "milestoneId": {
+          "type": "string",
+          "enum": [
+            "first_deposit",
+            "first_1000_php",
+            "first_month_consistency",
+            "first_10000_php",
+            "quarter_year_habit",
+            "down_payment_25",
+            "down_payment_50",
+            "down_payment_100"
+          ],
+          "description": "Canonical milestone identifier."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Badge display title."
+        },
+        "achievedValue": {
+          "type": "number",
+          "description": "Metric value at unlock time."
+        },
+        "unlockedDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Local ISO calendar date when unlocked (YYYY-MM-DD)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": ["userId", "milestoneId", "title", "achievedValue", "unlockedDate", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile keyed by Firebase Auth UID."
+    },
+    "/scenarios/{scenarioId}": {
+      "schema": { "$ref": "#/entities/SavingsScenario" },
+      "description": "User-owned weekly micro-investing and rent-to-equity scenarios."
+    },
+    "/savingsLogs/{logId}": {
+      "schema": { "$ref": "#/entities/SavingsLog" },
+      "description": "User-owned weekly peso contribution ledger entries."
+    },
+    "/milestones/{awardId}": {
+      "schema": { "$ref": "#/entities/MilestoneAward" },
+      "description": "User-owned unlocked savings milestone badge records."
+    }
+  }
+}

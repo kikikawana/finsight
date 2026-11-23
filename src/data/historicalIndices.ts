@@ -1,0 +1,107 @@
+import type { BenchmarkDataset, BenchmarkId } from '../types/finance';
+
+/**
+ * Actual calendar-year total returns (2005–2024, 20 full market years)
+ * including crisis drawdowns (2008, 2018, 2022) and recoveries.
+ */
+export const BENCHMARK_DATASETS: Record<BenchmarkId, BenchmarkDataset> = {
+  sp500: {
+    id: 'sp500',
+    name: 'S&P 500 Total Return Index',
+    shortName: 'S&P 500',
+    tickerLabel: 'SPXTR · 2005–2024',
+    description:
+      '500 leading U.S. large-cap companies with dividends reinvested (accessible in PHP via local U.S. Equity Index Feeder Funds or global ETFs).',
+    dataSource: 'S&P Dow Jones Indices calendar-year Total Return (2005–2024)',
+    annualReturns: [
+      { year: 2005, annualReturnPct: 4.91 },
+      { year: 2006, annualReturnPct: 15.79 },
+      { year: 2007, annualReturnPct: 5.49 },
+      { year: 2008, annualReturnPct: -37.0, eventNote: 'Global Financial Crisis' },
+      { year: 2009, annualReturnPct: 26.46, eventNote: 'Post-GFC Rebound' },
+      { year: 2010, annualReturnPct: 15.06 },
+      { year: 2011, annualReturnPct: 2.11 },
+      { year: 2012, annualReturnPct: 16.0 },
+      { year: 2013, annualReturnPct: 32.39 },
+      { year: 2014, annualReturnPct: 13.69 },
+      { year: 2015, annualReturnPct: 1.38 },
+      { year: 2016, annualReturnPct: 11.96 },
+      { year: 2017, annualReturnPct: 21.83 },
+      { year: 2018, annualReturnPct: -4.38 },
+      { year: 2019, annualReturnPct: 31.49 },
+      { year: 2020, annualReturnPct: 18.4, eventNote: 'COVID-19 Shock & Recovery' },
+      { year: 2021, annualReturnPct: 28.71 },
+      { year: 2022, annualReturnPct: -18.11, eventNote: 'Inflation Rate-Hike Cycle' },
+      { year: 2023, annualReturnPct: 26.29 },
+      { year: 2024, annualReturnPct: 25.02 },
+    ],
+  },
+  psei: {
+    id: 'psei',
+    name: 'Philippine Stock Exchange Index (Total Return Est.)',
+    shortName: 'PSEi (PHP)',
+    tickerLabel: 'PSEi + Div · 2005–2024',
+    description:
+      'Top 30 blue-chip Philippine corporations traded on the PSE in Philippine Pesos, combining historical price changes with average cash dividend yields (~2.4%/yr).',
+    dataSource: 'PSEi annual close returns + historical dividend yield estimates (2005–2024)',
+    annualReturns: [
+      { year: 2005, annualReturnPct: 17.5 },
+      { year: 2006, annualReturnPct: 44.8 },
+      { year: 2007, annualReturnPct: 23.6 },
+      { year: 2008, annualReturnPct: -45.5, eventNote: 'Global Financial Crisis' },
+      { year: 2009, annualReturnPct: 65.5, eventNote: 'Emerging Market Rally' },
+      { year: 2010, annualReturnPct: 39.8 },
+      { year: 2011, annualReturnPct: 6.3 },
+      { year: 2012, annualReturnPct: 35.0, eventNote: 'Investment-Grade Upgrade Run' },
+      { year: 2013, annualReturnPct: 3.3 },
+      { year: 2014, annualReturnPct: 24.8 },
+      { year: 2015, annualReturnPct: -1.8 },
+      { year: 2016, annualReturnPct: 0.6 },
+      { year: 2017, annualReturnPct: 27.1 },
+      { year: 2018, annualReturnPct: -10.6 },
+      { year: 2019, annualReturnPct: 6.9 },
+      { year: 2020, annualReturnPct: -6.2, eventNote: 'Pandemic Lockdowns' },
+      { year: 2021, annualReturnPct: 2.3 },
+      { year: 2022, annualReturnPct: -5.1, eventNote: 'BSP Rate Tightening' },
+      { year: 2023, annualReturnPct: 1.1 },
+      { year: 2024, annualReturnPct: 4.2 },
+    ],
+  },
+  global60_40: {
+    id: 'global60_40',
+    name: 'Balanced 60/40 Index Portfolio',
+    shortName: 'Balanced 60/40',
+    tickerLabel: '60% Eq / 40% Bond · 2005–2024',
+    description:
+      '60% S&P 500 Equities + 40% Investment-Grade Aggregate Bonds rebalanced annually for smoother drawdowns while saving toward a near-term home down payment.',
+    dataSource: '60% S&P 500 TR / 40% Bloomberg US Aggregate Bond historical blend (2005–2024)',
+    annualReturns: [
+      { year: 2005, annualReturnPct: 3.92 },
+      { year: 2006, annualReturnPct: 11.21 },
+      { year: 2007, annualReturnPct: 6.08 },
+      { year: 2008, annualReturnPct: -20.1, eventNote: 'Bonds Cushioned 2008 Crash' },
+      { year: 2009, annualReturnPct: 18.25 },
+      { year: 2010, annualReturnPct: 11.65 },
+      { year: 2011, annualReturnPct: 4.4 },
+      { year: 2012, annualReturnPct: 11.29 },
+      { year: 2013, annualReturnPct: 18.62 },
+      { year: 2014, annualReturnPct: 10.6 },
+      { year: 2015, annualReturnPct: 1.05 },
+      { year: 2016, annualReturnPct: 8.24 },
+      { year: 2017, annualReturnPct: 14.51 },
+      { year: 2018, annualReturnPct: -2.62 },
+      { year: 2019, annualReturnPct: 22.38 },
+      { year: 2020, annualReturnPct: 14.04 },
+      { year: 2021, annualReturnPct: 16.61 },
+      { year: 2022, annualReturnPct: -16.07, eventNote: 'Rare Stock + Bond Drawdown' },
+      { year: 2023, annualReturnPct: 17.99 },
+      { year: 2024, annualReturnPct: 15.51 },
+    ],
+  },
+};
+
+export const BENCHMARK_LIST: BenchmarkDataset[] = [
+  BENCHMARK_DATASETS.sp500,
+  BENCHMARK_DATASETS.psei,
+  BENCHMARK_DATASETS.global60_40,
+];

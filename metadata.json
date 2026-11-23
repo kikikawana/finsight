@@ -1,0 +1,6 @@
+{
+  "name": "FinSight",
+  "description": "Weekly peso micro-investing projections on real historical stock index data and rent-to-equity down payment modeling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
