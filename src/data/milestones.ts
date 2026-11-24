@@ -12,14 +12,14 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
   {
     id: 'first_deposit',
     title: 'First Step Taken',
-    description: 'Log your very first weekly peso deposit into your FinSight ledger.',
+    description: 'Log your very first weekly deposit into your FinSight ledger.',
     category: 'Consistency',
     targetLabel: '1 deposit',
   },
   {
     id: 'first_1000_php',
-    title: 'First 1,000 Pesos Saved',
-    description: 'Reach ₱1,000 in total logged weekly contributions.',
+    title: 'First ₱1,000 Saved',
+    description: 'Reach ₱1,000 in total logged deposits from baon, gigs, or paychecks.',
     category: 'Amount',
     targetLabel: '₱1,000 saved',
   },
@@ -32,44 +32,41 @@ export const MILESTONE_DEFINITIONS: MilestoneDefinition[] = [
   },
   {
     id: 'first_10000_php',
-    title: '₱10,000 Starter Fund',
-    description: 'Accumulate ₱10,000 in logged weekly deposits.',
+    title: '₱10,000 Milestone Fund',
+    description: 'Accumulate ₱10,000 in logged deposits toward your goals.',
     category: 'Amount',
     targetLabel: '₱10,000 saved',
   },
   {
     id: 'quarter_year_habit',
-    title: '12-Week Market Habit',
-    description: 'Stay consistent for 12 distinct weeks—one full market quarter.',
+    title: '12-Week Saving Habit',
+    description: 'Stay consistent for 12 distinct weeks, one full quarter of steady saving.',
     category: 'Consistency',
     targetLabel: '12 weeks',
   },
   {
     id: 'down_payment_25',
-    title: '25% to Down Payment',
-    description: 'Fund one-quarter of your target home down payment.',
-    category: 'Housing',
+    title: '25% to Your Goal',
+    description: 'Fund one-quarter of your personal target goal (vehicle, tuition, laptop, or safety net).',
+    category: 'Goal',
     targetLabel: '25% funded',
   },
   {
     id: 'down_payment_50',
-    title: 'Halfway to Keys',
-    description: 'Reach 50% of the down payment needed to turn rent into equity.',
-    category: 'Housing',
+    title: 'Halfway to Your Goal',
+    description: 'Reach 50% of the target amount for your active savings plan.',
+    category: 'Goal',
     targetLabel: '50% funded',
   },
   {
     id: 'down_payment_100',
-    title: 'Down Payment Funded',
-    description: 'Hit 100% of your target down payment goal.',
-    category: 'Housing',
+    title: '100% Goal Funded',
+    description: 'Hit 100% of your active savings goal, debt-free and ready.',
+    category: 'Goal',
     targetLabel: '100% funded',
   },
 ];
 
-/**
- * Computes ISO week key (YYYY-Www) from YYYY-MM-DD in a timezone-independent way.
- */
 export function getIsoWeekKey(isoDate: string): string {
   const parts = isoDate.split('-').map(Number);
   if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) {
@@ -107,10 +104,7 @@ export function evaluateMilestones(
   const logsCount = logs.length;
   const totalLogged = logs.reduce((sum, l) => sum + l.amount, 0);
   const distinctWeeks = countDistinctWeeks(logs);
-  const requiredDownPayment = Math.max(
-    1,
-    (scenario.targetHomePrice * scenario.downPaymentPercent) / 100
-  );
+  const targetGoalAmount = Math.max(500, scenario.goalTargetAmount);
   const totalWithInitial = scenario.initialDeposit + totalLogged;
 
   const awardMap = new Map<MilestoneId, MilestoneAward>();
@@ -162,7 +156,7 @@ export function evaluateMilestones(
         progressText = `${Math.min(distinctWeeks, 12)} / 12 weeks`;
         break;
       case 'down_payment_25': {
-        const threshold = requiredDownPayment * 0.25;
+        const threshold = targetGoalAmount * 0.25;
         currentValue = logsCount > 0 ? totalWithInitial : 0;
         targetValue = threshold;
         conditionMet = logsCount >= 1 && totalWithInitial >= threshold;
@@ -170,7 +164,7 @@ export function evaluateMilestones(
         break;
       }
       case 'down_payment_50': {
-        const threshold = requiredDownPayment * 0.5;
+        const threshold = targetGoalAmount * 0.5;
         currentValue = logsCount > 0 ? totalWithInitial : 0;
         targetValue = threshold;
         conditionMet = logsCount >= 1 && totalWithInitial >= threshold;
@@ -178,7 +172,7 @@ export function evaluateMilestones(
         break;
       }
       case 'down_payment_100': {
-        const threshold = requiredDownPayment;
+        const threshold = targetGoalAmount;
         currentValue = logsCount > 0 ? totalWithInitial : 0;
         targetValue = threshold;
         conditionMet = logsCount >= 1 && totalWithInitial >= threshold;

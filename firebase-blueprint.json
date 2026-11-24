@@ -43,7 +43,7 @@
     },
     "SavingsScenario": {
       "title": "SavingsScenario",
-      "description": "A user's saved weekly peso micro-investment and rent-to-equity scenario.",
+      "description": "A user's saved goal-based weekly savings, income percentage split, and micro-investing scenario.",
       "type": "object",
       "properties": {
         "userId": {
@@ -56,40 +56,57 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 80,
-          "description": "Scenario name."
+          "description": "Goal scenario name."
+        },
+        "goalCategory": {
+          "type": "string",
+          "enum": ["motorcycle", "student", "emergency", "gadget", "business", "travel", "custom"],
+          "description": "Category of the savings goal."
+        },
+        "goalTargetAmount": {
+          "type": "number",
+          "description": "Target goal cost in PHP."
+        },
+        "incomeAmount": {
+          "type": "number",
+          "description": "Allowance or income amount per cadence in PHP."
+        },
+        "incomeCadence": {
+          "type": "string",
+          "enum": ["weekly", "monthly"],
+          "description": "Cadence of the entered allowance or income."
+        },
+        "savingsPercent": {
+          "type": "number",
+          "description": "Percentage of income allocated to this savings goal."
+        },
+        "needsPercent": {
+          "type": "number",
+          "description": "Percentage of income allocated to essentials and needs."
+        },
+        "wantsPercent": {
+          "type": "number",
+          "description": "Percentage of income allocated to flexible spending and wants."
         },
         "weeklySavings": {
           "type": "number",
-          "description": "Weekly peso contribution amount."
+          "description": "Weekly contribution amount in PHP."
         },
         "initialDeposit": {
           "type": "number",
-          "description": "Starting portfolio capital in PHP."
+          "description": "Starting saved capital in PHP."
         },
         "benchmarkId": {
           "type": "string",
           "enum": ["sp500", "psei", "global60_40"],
           "description": "Selected historical stock index benchmark."
         },
-        "monthlyRent": {
-          "type": "number",
-          "description": "Current monthly rent payment in PHP."
-        },
-        "targetHomePrice": {
-          "type": "number",
-          "description": "Target home purchase price in PHP."
-        },
-        "downPaymentPercent": {
-          "type": "number",
-          "description": "Target down payment percentage."
-        },
-        "mortgageRate": {
-          "type": "number",
-          "description": "Annual mortgage interest rate percentage."
-        },
-        "rentGrowthRate": {
-          "type": "number",
-          "description": "Annual rent inflation percentage."
+        "folderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Optional GoalFolder document ID organizing this saved goal file."
         },
         "createdAt": {
           "type": "string",
@@ -105,21 +122,58 @@
       "required": [
         "userId",
         "title",
+        "goalCategory",
+        "goalTargetAmount",
+        "incomeAmount",
+        "incomeCadence",
+        "savingsPercent",
+        "needsPercent",
+        "wantsPercent",
         "weeklySavings",
         "initialDeposit",
         "benchmarkId",
-        "monthlyRent",
-        "targetHomePrice",
-        "downPaymentPercent",
-        "mortgageRate",
-        "rentGrowthRate",
         "createdAt",
         "updatedAt"
       ]
     },
+    "GoalFolder": {
+      "title": "GoalFolder",
+      "description": "User-created folder for organizing multiple saved goal files.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "description": "Folder display name."
+        },
+        "color": {
+          "type": "string",
+          "enum": ["emerald", "amber", "sky", "rose", "slate"],
+          "description": "Folder accent tag color."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["userId", "name", "color", "createdAt", "updatedAt"]
+    },
     "SavingsLog": {
       "title": "SavingsLog",
-      "description": "A recorded weekly peso savings deposit tied to a scenario.",
+      "description": "A recorded weekly savings deposit tied to a scenario.",
       "type": "object",
       "properties": {
         "userId": {
@@ -137,12 +191,12 @@
         },
         "amount": {
           "type": "number",
-          "description": "Deposited peso amount."
+          "description": "Deposited amount in PHP."
         },
         "note": {
           "type": "string",
           "maxLength": 160,
-          "description": "Short note describing the weekly deposit."
+          "description": "Short note describing the deposit."
         },
         "weekDate": {
           "type": "string",
@@ -208,6 +262,189 @@
         }
       },
       "required": ["userId", "milestoneId", "title", "achievedValue", "unlockedDate", "createdAt"]
+    },
+    "SharedProgressReport": {
+      "title": "SharedProgressReport",
+      "description": "Sanitized public snapshot of a user's savings goal progress and unlocked milestone badges for sharing via unique link.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "authorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "description": "Public display name chosen by the author (no email or PII)."
+        },
+        "goalTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Goal display title."
+        },
+        "goalCategory": {
+          "type": "string",
+          "enum": ["motorcycle", "student", "emergency", "gadget", "business", "travel", "custom"],
+          "description": "Category of the savings goal."
+        },
+        "goalTargetAmount": {
+          "type": "number",
+          "description": "Target goal amount in PHP."
+        },
+        "currentSaved": {
+          "type": "number",
+          "description": "Total saved balance (starting balance plus logged deposits) in PHP."
+        },
+        "weeklySavings": {
+          "type": "number",
+          "description": "Planned weekly contribution amount in PHP."
+        },
+        "savingsPercent": {
+          "type": "number",
+          "description": "Percentage of income allocated to this goal."
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["PHP", "USD", "SGD"],
+          "description": "Preferred display currency."
+        },
+        "benchmarkId": {
+          "type": "string",
+          "enum": ["sp500", "psei", "global60_40"],
+          "description": "Selected historical benchmark index."
+        },
+        "earnedBadgesCount": {
+          "type": "number",
+          "description": "Count of unlocked milestone badges."
+        },
+        "totalBadgesCount": {
+          "type": "number",
+          "description": "Total milestone badges available."
+        },
+        "unlockedMilestoneIds": {
+          "type": "array",
+          "description": "Bounded list of unlocked canonical milestone IDs."
+        },
+        "depositsCount": {
+          "type": "number",
+          "description": "Number of deposit check-ins logged."
+        },
+        "showExactAmounts": {
+          "type": "boolean",
+          "description": "Whether exact peso amounts are visible or masked to percentages only."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "authorName",
+        "goalTitle",
+        "goalCategory",
+        "goalTargetAmount",
+        "currentSaved",
+        "weeklySavings",
+        "savingsPercent",
+        "currency",
+        "benchmarkId",
+        "earnedBadgesCount",
+        "totalBadgesCount",
+        "unlockedMilestoneIds",
+        "depositsCount",
+        "showExactAmounts",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BudgetEntry": {
+      "title": "BudgetEntry",
+      "description": "Everyday budget list item (planned, spent, or skipped & swept to savings goal) tied to the user's Needs/Wants split.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Short label for the everyday item (e.g. Morning Coffee, Jeepney Commute)."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Item cost or allowance value in PHP."
+        },
+        "bucket": {
+          "type": "string",
+          "enum": ["needs", "wants"],
+          "description": "Maps this everyday item to either Needs or Wants in the user's Goal Split."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["food", "commute", "bills", "groceries", "coffee", "personal", "other"],
+          "description": "Everyday spending category."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["planned", "spent", "swept"],
+          "description": "Checklist item state: planned for today, spent, or skipped & swept into savings."
+        },
+        "entryDate": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Local ISO calendar date (YYYY-MM-DD)."
+        },
+        "isEssentialRoutine": {
+          "type": "boolean",
+          "description": "Whether this item is pinned to the user's recurring everyday checklist."
+        },
+        "scenarioId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Optional active SavingsScenario document ID."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "amount",
+        "bucket",
+        "category",
+        "status",
+        "entryDate",
+        "isEssentialRoutine",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -215,17 +452,29 @@
       "schema": { "$ref": "#/entities/UserProfile" },
       "description": "Private user profile keyed by Firebase Auth UID."
     },
+    "/folders/{folderId}": {
+      "schema": { "$ref": "#/entities/GoalFolder" },
+      "description": "User-owned folders for organizing saved goal files."
+    },
     "/scenarios/{scenarioId}": {
       "schema": { "$ref": "#/entities/SavingsScenario" },
-      "description": "User-owned weekly micro-investing and rent-to-equity scenarios."
+      "description": "User-owned goal savings, percentage split, and micro-investing scenarios."
     },
     "/savingsLogs/{logId}": {
       "schema": { "$ref": "#/entities/SavingsLog" },
-      "description": "User-owned weekly peso contribution ledger entries."
+      "description": "User-owned savings contribution ledger entries."
     },
     "/milestones/{awardId}": {
       "schema": { "$ref": "#/entities/MilestoneAward" },
       "description": "User-owned unlocked savings milestone badge records."
+    },
+    "/sharedReports/{shareId}": {
+      "schema": { "$ref": "#/entities/SharedProgressReport" },
+      "description": "Publicly readable (via unguessable ID), owner-writable sanitized savings achievement showcase snapshots."
+    },
+    "/budgetEntries/{entryId}": {
+      "schema": { "$ref": "#/entities/BudgetEntry" },
+      "description": "User-owned everyday budget checklist and daily spend entries."
     }
   }
 }

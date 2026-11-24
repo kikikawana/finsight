@@ -2,16 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertCircle,
+  MessageSquare,
   Send,
   Trash2,
   X,
 } from 'lucide-react';
+import { GOAL_CATEGORY_LABELS } from '../data/goalPresets';
 import { BENCHMARK_DATASETS } from '../data/historicalIndices';
-import { FinSightMascot } from './FinSightMascot';
 import type { ScenarioInput } from '../types/finance';
 import {
+  computeGoalSplitPlan,
   computeHistoricalHorizons,
-  computeRentVsEquity,
+  formatDurationMonths,
   type CurrencyCode,
 } from '../utils/financeMath';
 
@@ -29,10 +31,10 @@ interface FinSightChatProps {
 }
 
 const SUGGESTED_PROMPTS = [
-  'How fast can I reach my down payment if I add ₱150/wk?',
-  'Explain my 20-year rent vs. equity numbers.',
-  'Why compare S&P 500 vs. PSEi for peso savings?',
-  'How do I unlock the First Month of Consistency badge?',
+  'How fast can I reach my goal if I raise my save % to 25%?',
+  'I am a student with a ₱1,500/wk allowance. How should I split it?',
+  'Should I keep my goal in a 4% digital bank or an index fund?',
+  'Compare 1-year, 5-year, and 10-year growth at my weekly rate.',
 ];
 
 function cleanCoachReply(raw: string): string {
@@ -63,7 +65,7 @@ export function FinSightChat({
     {
       id: 'welcome',
       role: 'model',
-      text: 'Hi! I am Piso, your FinSight AI Coach. Ask me about your weekly compounding projections, historical S&P 500 vs. PSEi returns, or how to turn your monthly rent into home equity.',
+      text: 'Hey! Ask me anything about your goal timeline, allowance splits, or how much faster a higher save % gets you there.',
     },
   ]);
 
@@ -93,10 +95,13 @@ export function FinSightChat({
 
     const historySnapshot = messages
       .filter((m) => m.id !== 'welcome')
-      .slice(-8)
+      .slice(-6)
       .map((m) => ({ role: m.role, text: m.text }));
 
     setMessages((prev) => [...prev, userMsg]);
+
+    const replyId = `m_${Date.now()}`;
+    let replyCreated = false;
 
     try {
       const horizons = computeHistoricalHorizons(
@@ -105,56 +110,124 @@ export function FinSightChat({
         scenario.benchmarkId,
         false
       );
-      const rentModel = computeRentVsEquity(scenario);
+      const plan = computeGoalSplitPlan(scenario);
 
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'text/event-stream, application/json',
+        },
         body: JSON.stringify({
           message: trimmed,
           history: historySnapshot,
           context: {
+            goalTitle: scenario.title,
+            goalCategoryLabel: GOAL_CATEGORY_LABELS[scenario.goalCategory],
+            goalTargetAmount: scenario.goalTargetAmount,
+            incomeAmount: scenario.incomeAmount,
+            incomeCadence: scenario.incomeCadence,
+            savingsPercent: scenario.savingsPercent,
+            needsPercent: scenario.needsPercent,
+            wantsPercent: scenario.wantsPercent,
             weeklySavings: scenario.weeklySavings,
             initialDeposit: scenario.initialDeposit,
             benchmarkName: BENCHMARK_DATASETS[scenario.benchmarkId].name,
             currency,
+            oneYearBalance: horizons[1].endingBalance,
             fiveYearBalance: horizons[5].endingBalance,
             tenYearBalance: horizons[10].endingBalance,
             twentyYearBalance: horizons[20].endingBalance,
-            monthlyRent: scenario.monthlyRent,
-            targetHomePrice: scenario.targetHomePrice,
-            requiredDownPayment: rentModel.requiredDownPayment,
-            yearsToDownPayment: rentModel.yearsToDownPayment,
-            monthlyMortgagePI: rentModel.monthlyMortgagePI,
+            timeToGoalInvested: formatDurationMonths(plan.monthsToGoalInvested),
+            timeToGoalCash: formatDurationMonths(plan.monthsToGoalCash),
             earnedBadgesCount,
             totalBadgesCount,
           },
         }),
       });
 
-      const rawBody = await res.text();
-      let data: { reply?: string; error?: string } = {};
-      if (rawBody) {
-        try {
-          data = JSON.parse(rawBody) as { reply?: string; error?: string };
-        } catch {
-          data = {};
+      const contentType = res.headers.get('content-type') ?? '';
+      if (res.ok && contentType.includes('text/event-stream') && res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let accumulatedRaw = '';
+
+        const appendDelta = (delta: string) => {
+          accumulatedRaw += delta;
+          const cleaned = cleanCoachReply(accumulatedRaw);
+          if (!replyCreated) {
+            replyCreated = true;
+            setLoading(false);
+            setMessages((prev) => [
+              ...prev,
+              { id: replyId, role: 'model', text: cleaned || delta },
+            ]);
+          } else {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === replyId ? { ...m, text: cleaned || accumulatedRaw } : m))
+            );
+          }
+        };
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine.startsWith('data:')) continue;
+            const payload = trimmedLine.slice(5).trim();
+            if (!payload || payload === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(payload) as { delta?: string; error?: string };
+              if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+              if (parsed.delta) {
+                appendDelta(parsed.delta);
+              }
+            } catch (parseErr) {
+              if (parseErr instanceof Error && parseErr.message && !(parseErr instanceof SyntaxError)) {
+                throw parseErr;
+              }
+            }
+          }
         }
-      }
 
-      const cleanedReply = data.reply ? cleanCoachReply(data.reply) : '';
-      if (!res.ok || !cleanedReply) {
-        throw new Error(data.error || 'Unable to get a reply from FinSight Coach.');
-      }
+        if (!replyCreated) {
+          throw new Error('Unable to get a reply from FinSight Coach.');
+        }
+      } else {
+        const rawBody = await res.text();
+        let data: { reply?: string; error?: string } = {};
+        if (rawBody) {
+          try {
+            data = JSON.parse(rawBody) as { reply?: string; error?: string };
+          } catch {
+            data = {};
+          }
+        }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `m_${Date.now()}`,
-          role: 'model',
-          text: cleanedReply,
-        },
-      ]);
+        const cleanedReply = data.reply ? cleanCoachReply(data.reply) : '';
+        if (!res.ok || !cleanedReply) {
+          throw new Error(data.error || 'Unable to get a reply from FinSight Coach.');
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: replyId,
+            role: 'model',
+            text: cleanedReply,
+          },
+        ]);
+      }
     } catch (err) {
       setErrorMsg(
         err instanceof Error
@@ -182,25 +255,17 @@ export function FinSightChat({
             exit={{ opacity: 0, y: 12, scale: 0.97 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             role="dialog"
-            aria-label="FinSight AI Coach"
-            className="mb-3 w-[calc(100vw-2.5rem)] sm:w-[400px] h-[520px] max-h-[75vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            aria-label="FinSight Help"
+            className="mb-3 w-[calc(100vw-2.5rem)] sm:w-[390px] h-[500px] max-h-[75vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="px-4 py-3.5 bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-700 text-white flex items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-                  <FinSightMascot
-                    mood={loading ? 'thinking' : 'happy'}
-                    className="w-8 h-8"
-                  />
+            <div className="px-4 py-3 finsight-obsidian-card text-white border-b border-emerald-800/50 flex items-center justify-between gap-3 shrink-0">
+              <div className="min-w-0">
+                <div className="text-sm font-display font-bold truncate text-white">
+                  Piso
                 </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold truncate">
-                    Piso · FinSight AI Coach
-                  </div>
-                  <div className="text-[11px] text-emerald-100 truncate">
-                    Live answers on your savings &amp; rent numbers
-                  </div>
+                <div className="text-[11px] text-emerald-200/80 truncate">
+                  Savings &amp; split Q&amp;A
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
@@ -213,7 +278,7 @@ export function FinSightChat({
                       {
                         id: 'welcome',
                         role: 'model',
-                        text: 'Chat cleared. Ask me anything about your weekly savings plan, historical returns, or home down payment timeline.',
+                        text: 'Chat cleared. Ask me anything about your goal timeline, income percentage splits, or weekly savings compounding.',
                       },
                     ]);
                   }}
@@ -223,7 +288,7 @@ export function FinSightChat({
                 </button>
                 <button
                   type="button"
-                  aria-label="Close AI Coach"
+                  aria-label="Close FinSight Coach"
                   onClick={() => setIsOpen(false)}
                   className="p-1.5 text-emerald-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
                 >
@@ -233,25 +298,20 @@ export function FinSightChat({
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-950/60">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-stone-50/90 dark:bg-slate-950/70">
               {messages.map((msg) => {
                 const isUser = msg.role === 'user';
                 const displayText = isUser ? msg.text : cleanCoachReply(msg.text);
                 return (
                   <div
                     key={msg.id}
-                    className={`flex items-end gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
-                    {!isUser && (
-                      <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
-                        <FinSightMascot mood="idle" className="w-6 h-6" />
-                      </div>
-                    )}
                     <div
-                      className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${
+                      className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap ${
                         isUser
-                          ? 'bg-emerald-700 text-white rounded-br-sm'
-                          : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-800 rounded-bl-sm'
+                          ? 'finsight-btn-primary text-white'
+                          : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-stone-200 dark:border-slate-800 shadow-xs'
                       }`}
                     >
                       {displayText}
@@ -261,12 +321,9 @@ export function FinSightChat({
               })}
 
               {loading && (
-                <div className="flex items-end gap-2 justify-start">
-                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
-                    <FinSightMascot mood="thinking" className="w-6 h-6" />
-                  </div>
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-bl-sm px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400">
-                    Piso is analyzing your scenario…
+                <div className="flex justify-start">
+                  <div className="bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-500 dark:text-slate-400">
+                    Checking your numbers…
                   </div>
                 </div>
               )}
@@ -292,7 +349,7 @@ export function FinSightChat({
                         key={prompt}
                         type="button"
                         onClick={() => void sendMessage(prompt)}
-                        className="text-left text-[11px] px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-600 dark:hover:border-emerald-500 transition-colors cursor-pointer"
+                        className="text-left text-[11px] px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-600 dark:hover:border-emerald-500 transition-colors cursor-pointer"
                       >
                         {prompt}
                       </button>
@@ -307,21 +364,21 @@ export function FinSightChat({
             {/* Input Form */}
             <form
               onSubmit={handleSubmit}
-              className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0"
+              className="p-3 bg-white dark:bg-slate-900 border-t border-stone-200 dark:border-slate-800 flex items-center gap-2 shrink-0"
             >
               <input
                 type="text"
                 value={input}
                 maxLength={2000}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about savings, rent, or math…"
-                className="flex-1 px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-600"
+                placeholder="Ask about goals, splits, or math…"
+                className="flex-1 px-3 py-2 text-xs sm:text-sm bg-stone-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 border border-stone-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-600"
               />
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
                 aria-label="Send message"
-                className="p-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white rounded-lg transition-colors cursor-pointer shrink-0"
+                className="finsight-btn-primary p-2.5 disabled:opacity-50 text-white rounded-lg cursor-pointer shrink-0"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -330,26 +387,22 @@ export function FinSightChat({
         )}
       </AnimatePresence>
 
-      {/* Floating Toggle Button with Piso Mascot */}
+      {/* Subtle Obsidian Forest Helper Launcher */}
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
-        className="inline-flex items-center gap-2.5 pl-2.5 pr-4 py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer whitespace-nowrap"
+        className="finsight-obsidian-card inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white rounded-xl hover:brightness-110 active:scale-[0.98] transition-all duration-150 cursor-pointer whitespace-nowrap"
       >
         {isOpen ? (
           <>
-            <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
-              <X className="w-4 h-4" aria-hidden="true" />
-            </span>
-            <span>Close Piso</span>
+            <X className="w-3.5 h-3.5 text-emerald-300" aria-hidden="true" />
+            <span>Close</span>
           </>
         ) : (
           <>
-            <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
-              <FinSightMascot mood="happy" className="w-6 h-6" />
-            </span>
-            <span>Ask Piso AI</span>
+            <MessageSquare className="w-3.5 h-3.5 text-amber-300" aria-hidden="true" />
+            <span>Ask Piso</span>
           </>
         )}
       </button>

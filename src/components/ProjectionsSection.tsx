@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { CalendarRange, Coins, TrendingUp } from 'lucide-react';
+import { motion } from 'motion/react';
+import { CalendarRange, Clock, Coins, TrendingUp } from 'lucide-react';
 import { BENCHMARK_DATASETS, BENCHMARK_LIST } from '../data/historicalIndices';
 import type { BenchmarkId, ScenarioInput } from '../types/finance';
 import {
@@ -18,10 +19,10 @@ interface ProjectionsSectionProps {
 }
 
 const WEEKLY_PRESETS = [
-  { amount: 50, label: '₱50/wk', hint: 'Spare change' },
-  { amount: 150, label: '₱150/wk', hint: 'One coffee skipped' },
-  { amount: 500, label: '₱500/wk', hint: 'Weekend dining' },
-  { amount: 1500, label: '₱1,500/wk', hint: 'Focused saver' },
+  { amount: 50, label: '₱50/wk', hint: 'Spare baon / change' },
+  { amount: 150, label: '₱150/wk', hint: 'Student coffee cut' },
+  { amount: 500, label: '₱500/wk', hint: 'Side-gig allocation' },
+  { amount: 1000, label: '₱1,000/wk', hint: 'Focused goal sprint' },
 ];
 
 export function ProjectionsSection({
@@ -49,7 +50,7 @@ export function ProjectionsSection({
   );
 
   const activeBenchmark = BENCHMARK_DATASETS[scenario.benchmarkId];
-  const milestoneList = [horizons[5], horizons[10], horizons[20]];
+  const milestoneList = [horizons[1], horizons[5], horizons[10], horizons[20]];
 
   return (
     <section
@@ -57,26 +58,26 @@ export function ProjectionsSection({
       className="py-10 sm:py-12 border-b border-slate-200/80 dark:border-slate-800/80 bg-transparent"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Editorial Intro */}
+        {/* Workspace Header */}
         <div className="max-w-3xl mb-8">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 tracking-wide mb-2">
-            <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-            <span>Weekly Micro-Investing · Real 20-Year Market History</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50 text-balance">
-            Even a few pesos every week compounds into real capital.
+            Weekly Projections · 1 to 20 Years
           </h1>
-          <p className="text-base text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
-            Enter what you can set aside each week—whether ₱20, ₱150, or ₱1,000—and see
-            what it would have grown to over actual historical 5, 10, and 20-year index
-            cycles, crashes included.
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
+            Enter what you can set aside each week, from ₱50 out of a student allowance to ₱1,000+
+            from a paycheck, and see how it grows across 1, 5, 10, and 20 years.
           </p>
         </div>
 
         {/* Main 2-Column Workspace */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+        >
           {/* Left Control Rail */}
-          <div className="lg:col-span-4 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6 shadow-xs">
+          <div className="lg:col-span-4 finsight-surface bg-white dark:bg-slate-900/95 border border-stone-200/90 dark:border-slate-800 rounded-xl p-6 space-y-6">
             <div>
               <div className="flex items-baseline justify-between mb-2">
                 <label
@@ -296,120 +297,96 @@ export function ProjectionsSection({
 
           {/* Right Projections Canvas */}
           <div className="lg:col-span-8 space-y-6">
-            {/* 5, 10, 20 Year Milestone Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 1, 5, 10, 20 Year Milestone Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
               {milestoneList.map((h) => {
                 const isTwenty = h.years === 20;
                 const isTen = h.years === 10;
+                const isFive = h.years === 5;
                 return (
                   <div
                     key={h.years}
-                    className={`finsight-card-interactive relative overflow-hidden rounded-2xl border p-5 ${
+                    className={`finsight-card-interactive rounded-xl p-4 ${
                       isTwenty
-                        ? 'bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white border-emerald-800/80'
-                        : isTen
-                          ? 'bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-amber-200/90 dark:border-amber-800/60'
-                          : 'bg-white/95 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 border-sky-200/90 dark:border-sky-800/60'
+                        ? 'finsight-obsidian-card text-white'
+                        : 'finsight-surface bg-white dark:bg-slate-900/95 text-slate-900 dark:text-slate-100 border border-stone-200/90 dark:border-slate-800'
                     }`}
                   >
-                    <span
-                      aria-hidden="true"
-                      className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
-                        isTwenty
-                          ? 'from-emerald-400 to-teal-300'
-                          : isTen
-                            ? 'from-amber-500 to-orange-400'
-                            : 'from-sky-500 to-cyan-400'
-                      }`}
-                    />
                     <div className="flex items-center justify-between gap-2 text-xs">
                       <span
-                        className={`inline-flex items-center gap-1.5 font-semibold ${
+                        className={`inline-flex items-center gap-1 font-semibold ${
                           isTwenty
-                            ? 'text-emerald-400'
+                            ? 'text-amber-300'
                             : isTen
                               ? 'text-amber-700 dark:text-amber-400'
-                              : 'text-sky-700 dark:text-sky-400'
+                              : isFive
+                                ? 'text-sky-700 dark:text-sky-400'
+                                : 'text-emerald-700 dark:text-emerald-400'
                         }`}
                       >
                         {isTwenty ? (
                           <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
                         ) : isTen ? (
                           <Coins className="w-3.5 h-3.5" aria-hidden="true" />
-                        ) : (
+                        ) : isFive ? (
                           <CalendarRange className="w-3.5 h-3.5" aria-hidden="true" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5" aria-hidden="true" />
                         )}
-                        <span>{h.years}-Year Horizon</span>
+                        <span>{h.years}-Year</span>
                       </span>
                       <span
-                        className={`font-mono ${
-                          isTwenty ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400'
+                        className={`font-mono text-[11px] ${
+                          isTwenty ? 'text-emerald-100/75' : 'text-slate-500 dark:text-slate-400'
                         }`}
                       >
                         {h.windowLabel}
                       </span>
                     </div>
 
-                    <div className="mt-3 text-2xl sm:text-3xl font-mono font-bold tracking-tight tabular-nums">
+                    <div className="mt-2.5 text-xl sm:text-2xl font-display font-bold tracking-tight tabular-nums">
                       {formatPeso(h.endingBalance, false, currency)}
                     </div>
 
                     <div
-                      className={`mt-1 text-xs font-mono tabular-nums ${
-                        isTwenty ? 'text-emerald-200' : 'text-slate-600 dark:text-slate-300'
+                      className={`mt-1 text-[11px] font-mono tabular-nums ${
+                        isTwenty ? 'text-emerald-300' : 'text-slate-600 dark:text-slate-300'
                       }`}
                     >
                       {h.realizedCagrPct >= 0 ? '+' : ''}
-                      {h.realizedCagrPct.toFixed(1)}% historical annual return
+                      {h.realizedCagrPct.toFixed(1)}% / yr
                     </div>
 
                     <div
-                      className={`mt-4 pt-3.5 border-t space-y-1.5 text-xs tabular-nums ${
-                        isTwenty ? 'border-emerald-800/60' : 'border-slate-100 dark:border-slate-800'
+                      className={`mt-3 pt-3 border-t space-y-1 text-[11px] tabular-nums ${
+                        isTwenty ? 'border-white/15' : 'border-stone-100 dark:border-slate-800'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className={isTwenty ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400'}>
-                          You put in
+                        <span className={isTwenty ? 'text-emerald-100/70' : 'text-slate-500 dark:text-slate-400'}>
+                          Deposited
                         </span>
                         <span className="font-mono font-medium">
-                          {formatPeso(h.totalContributed, false, currency)}
+                          {formatPeso(h.totalContributed, true, currency)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className={isTwenty ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400'}>
-                          Market growth
+                        <span className={isTwenty ? 'text-emerald-100/70' : 'text-slate-500 dark:text-slate-400'}>
+                          Growth
                         </span>
                         <span
                           className={`font-mono font-semibold ${
                             h.totalGrowth >= 0
                               ? isTwenty
-                                ? 'text-emerald-400'
+                                ? 'text-amber-300'
                                 : 'text-emerald-700 dark:text-emerald-400'
                               : 'text-red-500 dark:text-red-400'
                           }`}
                         >
                           {h.totalGrowth >= 0 ? '+' : ''}
-                          {formatPeso(h.totalGrowth, false, currency)}
+                          {formatPeso(h.totalGrowth, true, currency)}
                         </span>
                       </div>
-                      {h.years < 20 && (
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-slate-400 dark:text-slate-500">20-yr rolling range</span>
-                          <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                            {formatPeso(h.rollingWorstEnding, true, currency)}–
-                            {formatPeso(h.rollingBestEnding, true, currency)}
-                          </span>
-                        </div>
-                      )}
-                      {h.years === 20 && (
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-slate-300">Free growth share</span>
-                          <span className="font-mono text-[11px] text-amber-300 font-semibold">
-                            {Math.max(0, h.growthSharePct).toFixed(0)}% of balance
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
@@ -423,7 +400,7 @@ export function ProjectionsSection({
               currency={currency}
             />
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

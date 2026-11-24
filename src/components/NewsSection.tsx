@@ -43,16 +43,8 @@ function NewsArticleCard({ article }: { article: NewsArticle }) {
       href={article.link}
       target="_blank"
       rel="noopener noreferrer"
-      className="finsight-card-interactive group relative overflow-hidden block bg-white/95 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200 dark:border-slate-800 hover:border-emerald-600 dark:hover:border-emerald-500 rounded-xl p-4 sm:p-5 transition-colors"
+      className="finsight-card-interactive group block bg-white/95 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-emerald-600 dark:hover:border-emerald-500 rounded-xl p-4 sm:p-5 transition-colors"
     >
-      <span
-        aria-hidden="true"
-        className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-75 group-hover:opacity-100 transition-opacity ${
-          isLocal
-            ? 'from-emerald-500 to-teal-400'
-            : 'from-sky-500 to-amber-400'
-        }`}
-      />
       <div className="flex items-center justify-between gap-2 text-[11px] font-medium mb-2">
         <span
           className={
@@ -274,12 +266,12 @@ export function NewsSection({ isOnline }: NewsSectionProps) {
               <Newspaper className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
               <span>Local &amp; International Market Pulse</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 text-balance">
-              Recent financial news shaping your pesos and housing goals.
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50 text-balance">
+              Recent financial news shaping your savings and purchasing power.
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
-              Follow live Philippine developments—BSP rate decisions, PSEi moves, and local housing—alongside
-              international S&amp;P 500, Federal Reserve, and inflation headlines.
+              Follow Philippine market news like BSP rate decisions, PSEi moves, and inflation
+              alongside S&amp;P 500, Federal Reserve, and digital bank rate updates.
             </p>
           </div>
 
@@ -350,7 +342,7 @@ export function NewsSection({ isOnline }: NewsSectionProps) {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter headlines (BSP, S&P 500, housing…)"
+              placeholder="Filter headlines (BSP, S&P 500, inflation…)"
               aria-label="Filter news headlines"
               className="w-full pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 bg-white/95 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-emerald-600 dark:focus:border-emerald-400"
             />
@@ -423,7 +415,7 @@ export function NewsSection({ isOnline }: NewsSectionProps) {
                         Local News · Philippines
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        PSEi, BSP rates, peso inflation &amp; local housing
+                        PSEi, BSP rates, peso inflation &amp; personal finance
                       </p>
                     </div>
                   </div>

@@ -82,7 +82,6 @@ export function MilestoneBadgeSvg({
       className={className}
       aria-hidden="true"
     >
-      {/* Shield / Medal outer geometry */}
       {id.startsWith('down_payment') ? (
         <path
           d="M32 4L56 14V31C56 45.2 45.8 56.4 32 60C18.2 56.4 8 45.2 8 31V14L32 4Z"
@@ -112,7 +111,6 @@ export function MilestoneBadgeSvg({
         </>
       )}
 
-      {/* Distinct symbolic emblem per milestone */}
       {id === 'first_deposit' && (
         <g stroke={palette.inner} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
           <path d="M32 44V26" />
@@ -185,8 +183,8 @@ export function MilestoneBadgeSvg({
 
       {id === 'down_payment_25' && (
         <g stroke={palette.inner} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="27" cy="30" r="6" fill={unlocked ? '#FFFFFF' : 'none'} />
-          <path d="M33 30H44M40 30V35M44 30V34" />
+          <circle cx="32" cy="27" r="9" fill={unlocked ? '#FFFFFF' : 'none'} />
+          <path d="M32 22V27L35.5 29" />
           <text
             x="32"
             y="47"
@@ -204,11 +202,11 @@ export function MilestoneBadgeSvg({
 
       {id === 'down_payment_50' && (
         <g stroke={palette.inner} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 31L32 20L44 31" />
-          <path d="M23 29V42H41V29" fill={unlocked ? '#FFFFFF' : 'none'} />
+          <path d="M23 44V18" />
+          <path d="M23 19H42L37 25L42 31H23" fill={unlocked ? palette.accent : 'none'} fillOpacity={unlocked ? 0.35 : 0} />
           <text
-            x="32"
-            y="38"
+            x="34"
+            y="46"
             textAnchor="middle"
             stroke="none"
             fill={palette.inner}
@@ -224,11 +222,12 @@ export function MilestoneBadgeSvg({
       {id === 'down_payment_100' && (
         <g stroke={palette.inner} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
           <path
-            d="M19 30L32 18L45 30V44H19V30Z"
+            d="M23 20H41V29C41 34 37 38 32 38C27 38 23 34 23 29V20Z"
             fill={unlocked ? palette.accent : 'none'}
             fillOpacity={unlocked ? 0.4 : 0}
           />
-          <path d="M27 33L31 37L38 29" stroke={palette.inner} strokeWidth="2.6" />
+          <path d="M23 23H19C19 28 21 30 23 30M41 23H45C45 28 43 30 41 30" />
+          <path d="M32 38V44M26 44H38" />
         </g>
       )}
     </svg>

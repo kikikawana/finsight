@@ -4,7 +4,7 @@ import http from 'node:http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { GoogleGenAI, ThinkingLevel } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
 
@@ -73,13 +73,13 @@ function extractTagValue(block: string, tag: string): string {
 
 function classifyNewsTopic(title: string, region: 'local' | 'international'): string {
   const lower = title.toLowerCase();
-  if (/housing|condo|real estate|mortgage|pag-ibig|property|rent|home/.test(lower)) {
-    return 'Housing & Property';
+  if (/digital bank|savings|interest|deposit|gcash|maya|student|allowance/.test(lower)) {
+    return 'Savings & Banking';
   }
   if (/bsp|bangko sentral|fed|federal reserve|rate|yield|central bank|ecb|boj/.test(lower)) {
     return 'Rates & Central Banks';
   }
-  if (/inflation|cpi|gdp|economy|economic|recession|jobs/.test(lower)) {
+  if (/inflation|cpi|gdp|economy|economic|recession|jobs|fuel|price/.test(lower)) {
     return 'Inflation & Macro';
   }
   if (/peso|dollar|php|usd|forex|currency|fx/.test(lower)) {
@@ -203,14 +203,14 @@ async function refreshNewsCache(forceRefresh = false): Promise<NewsCacheEntry> {
 
   inFlightNewsRefresh = (async () => {
     const localPrimaryUrl =
-      'https://news.google.com/rss/search?q=(Philippines+economy+OR+PSEi+OR+Bangko+Sentral+OR+Pag-IBIG+housing+OR+Philippine+peso+inflation)+when:7d&hl=en-PH&gl=PH&ceid=PH:en';
+      'https://news.google.com/rss/search?q=(Philippines+economy+OR+PSEi+OR+Bangko+Sentral+OR+digital+banks+Philippines+OR+Philippine+peso+inflation)+when:7d&hl=en-PH&gl=PH&ceid=PH:en';
     const localFallbackUrl =
-      'https://news.google.com/rss/search?q=(Philippines+economy+OR+PSEi+OR+Bangko+Sentral+OR+Pag-IBIG+housing+OR+Philippine+peso+inflation)+when:14d&hl=en-PH&gl=PH&ceid=PH:en';
+      'https://news.google.com/rss/search?q=(Philippines+economy+OR+PSEi+OR+Bangko+Sentral+OR+personal+finance+Philippines+OR+Philippine+peso+inflation)+when:14d&hl=en-PH&gl=PH&ceid=PH:en';
 
     const intlPrimaryUrl =
-      'https://news.google.com/rss/search?q=(S%26P+500+OR+Federal+Reserve+OR+global+stock+market+OR+global+inflation+OR+mortgage+rates)+when:2d&hl=en-US&gl=US&ceid=US:en';
+      'https://news.google.com/rss/search?q=(S%26P+500+OR+Federal+Reserve+OR+global+stock+market+OR+global+inflation+OR+interest+rates)+when:2d&hl=en-US&gl=US&ceid=US:en';
     const intlFallbackUrl =
-      'https://news.google.com/rss/search?q=(S%26P+500+OR+Federal+Reserve+OR+global+stock+market+OR+global+inflation+OR+mortgage+rates)+when:7d&hl=en-US&gl=US&ceid=US:en';
+      'https://news.google.com/rss/search?q=(S%26P+500+OR+Federal+Reserve+OR+global+stock+market+OR+global+inflation+OR+interest+rates)+when:7d&hl=en-US&gl=US&ceid=US:en';
 
     const [localRes, intlRes] = await Promise.allSettled([
       fetchRegionNews(localPrimaryUrl, localFallbackUrl, 'local'),
@@ -262,28 +262,41 @@ interface ChatHistoryItem {
 }
 
 interface ChatContextPayload {
+  goalTitle?: string;
+  goalCategoryLabel?: string;
+  goalTargetAmount?: number;
+  incomeAmount?: number;
+  incomeCadence?: string;
+  savingsPercent?: number;
+  needsPercent?: number;
+  wantsPercent?: number;
   weeklySavings?: number;
   initialDeposit?: number;
   benchmarkName?: string;
   currency?: string;
+  oneYearBalance?: number;
   fiveYearBalance?: number;
   tenYearBalance?: number;
   twentyYearBalance?: number;
-  monthlyRent?: number;
-  targetHomePrice?: number;
-  requiredDownPayment?: number;
-  yearsToDownPayment?: number | null;
-  monthlyMortgagePI?: number;
+  timeToGoalInvested?: string;
+  timeToGoalCash?: string;
   earnedBadgesCount?: number;
   totalBadgesCount?: number;
 }
+
+let cachedGenAIKey: string | undefined;
+let cachedGenAIClient: GoogleGenAI | null = null;
 
 function getGenAIClient(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
     return null;
   }
-  return new GoogleGenAI({
+  if (cachedGenAIClient && cachedGenAIKey === apiKey) {
+    return cachedGenAIClient;
+  }
+  cachedGenAIKey = apiKey;
+  cachedGenAIClient = new GoogleGenAI({
     apiKey,
     httpOptions: {
       headers: {
@@ -291,6 +304,7 @@ function getGenAIClient(): GoogleGenAI | null {
       },
     },
   });
+  return cachedGenAIClient;
 }
 
 async function startServer() {
@@ -319,19 +333,6 @@ async function startServer() {
     }
   });
 
-  function stripMarkdownAsterisks(raw: string): string {
-    return raw
-      .replace(/\r\n/g, '\n')
-      .replace(/^(\s*)\*\s+/gm, '$1• ')
-      .replace(/^#{1,6}\s+/gm, '')
-      .replace(/(\d|\))\s*\*\s*(\d|\()/g, '$1 × $2')
-      .replace(/\*\*\*([\s\S]*?)\*\*\*/g, '$1')
-      .replace(/\*\*([\s\S]*?)\*\*/g, '$1')
-      .replace(/\*([^*\n]+?)\*/g, '$1')
-      .replace(/\*/g, '')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-  }
 
   function extractGeminiErrorInfo(error: unknown): {
     status?: number;
@@ -416,7 +417,7 @@ async function startServer() {
         return;
       }
 
-      const rawHistory = Array.isArray(body?.history) ? body.history.slice(-10) : [];
+      const rawHistory = Array.isArray(body?.history) ? body.history.slice(-6) : [];
       const historyContents = rawHistory
         .filter(
           (item): item is ChatHistoryItem =>
@@ -428,37 +429,27 @@ async function startServer() {
         )
         .map((item) => ({
           role: item.role,
-          parts: [{ text: item.text.slice(0, 2000) }],
+          parts: [{ text: item.text.slice(0, 1200) }],
         }));
 
       const ctx = body?.context ?? {};
       const contextSummary = [
-        `Weekly Savings: ₱${ctx.weeklySavings ?? 250}/wk`,
-        `Initial Deposit: ₱${ctx.initialDeposit ?? 0}`,
-        `Selected Benchmark: ${ctx.benchmarkName ?? 'S&P 500 Total Return Index'}`,
-        `Display Currency: ${ctx.currency ?? 'PHP'}`,
-        `Projected Balances (2005-2024 historical replay): 5-yr=₱${Math.round(ctx.fiveYearBalance ?? 0)}, 10-yr=₱${Math.round(ctx.tenYearBalance ?? 0)}, 20-yr=₱${Math.round(ctx.twentyYearBalance ?? 0)}`,
-        `Monthly Rent: ₱${ctx.monthlyRent ?? 12000}/mo`,
-        `Target Home Price: ₱${ctx.targetHomePrice ?? 2400000}`,
-        `Required Down Payment: ₱${Math.round(ctx.requiredDownPayment ?? 480000)}`,
-        `Estimated Years to Down Payment: ${ctx.yearsToDownPayment !== null && ctx.yearsToDownPayment !== undefined ? `${ctx.yearsToDownPayment} years` : 'Over 20 years at current pace'}`,
-        `Estimated Monthly Mortgage P&I: ₱${Math.round(ctx.monthlyMortgagePI ?? 0)}/mo`,
-        `Milestones Earned: ${ctx.earnedBadgesCount ?? 0} of ${ctx.totalBadgesCount ?? 8}`,
+        `Goal: ${ctx.goalTitle ?? 'Personal Savings Goal'} (${ctx.goalCategoryLabel ?? 'Goal'}), Target: ₱${Math.round(ctx.goalTargetAmount ?? 50000)}`,
+        `Income: ₱${Math.round(ctx.incomeAmount ?? 1500)} (${ctx.incomeCadence ?? 'weekly'}), Split: ${ctx.savingsPercent ?? 20}% Save / ${ctx.needsPercent ?? 55}% Needs / ${ctx.wantsPercent ?? 25}% Wants`,
+        `Weekly Save: ₱${ctx.weeklySavings ?? 300}/wk, Already Saved: ₱${ctx.initialDeposit ?? 0}, Currency: ${ctx.currency ?? 'PHP'}`,
+        `Benchmark (${ctx.benchmarkName ?? 'Balanced 60/40'}): 1y=₱${Math.round(ctx.oneYearBalance ?? 0)}, 5y=₱${Math.round(ctx.fiveYearBalance ?? 0)}, 10y=₱${Math.round(ctx.tenYearBalance ?? 0)}, 20y=₱${Math.round(ctx.twentyYearBalance ?? 0)}`,
+        `ETA: ${ctx.timeToGoalInvested ?? 'N/A'} invested vs. ${ctx.timeToGoalCash ?? 'N/A'} cash | Badges: ${ctx.earnedBadgesCount ?? 0}/${ctx.totalBadgesCount ?? 8}`,
       ].join('\n');
 
-      const systemInstruction = `You are Piso, the FinSight AI Coach—a clear, encouraging, and mathematically grounded personal finance guide inside the FinSight web app.
-Focus on:
-• Helping Filipino and global peso savers understand weekly micro-investing (even ₱50–₱250/week) using FinSight's actual 2005–2024 historical returns for S&P 500 Total Return, PSEi Total Return, and Balanced 60/40.
-• Explaining how saving for a down payment lets monthly rent transition into home mortgage equity.
-• Explaining FinSight's milestone badges (First Step Taken, First 1,000 Pesos Saved, First Month of Consistency across 4 distinct weeks, etc.).
-• Keep answers concise (2–4 short paragraphs or bullet points), reference the user's current numbers below accurately, and remind users that historical simulations are educational rather than guaranteed future returns.
+      const systemInstruction = `You are Piso, a straightforward, down-to-earth savings helper inside FinSight.
+How to reply:
+• Sound like a practical, helpful friend who is good with numbers. Keep answers short (2 to 4 plain sentences, or a quick 2-3 line breakdown if comparing options).
+• Never open with filler like "Great question!" or "Sure, here is a breakdown:". Jump straight to the answer using their actual numbers below.
+• Do not repeat all of their settings back to them, and do not add generic legal disclaimers at the end.
+• Help with whatever custom goal they typed, student weekly allowances, percentage splits (Save %, Needs %, Wants %), and comparing cash vs. 4% digital bank vs. index growth.
+• Plain text only: never use asterisks (* or **), markdown headings (#), backticks, or em-dashes. Use "×" for multiplication.
 
-Formatting rules (strict):
-• Output clean plain text ONLY. NEVER use asterisks (* or **), Markdown bold/italics, Markdown headings (#), or code backticks.
-• For bullet points, start lines with "• " or numbered items like "1. ".
-• Use "×" instead of "*" for any multiplication formulas.
-
-User's live FinSight workspace snapshot (base PHP values):
+User's current numbers (PHP):
 ${contextSummary}`;
 
       const contents = [
@@ -466,18 +457,17 @@ ${contextSummary}`;
         { role: 'user' as const, parts: [{ text: message }] },
       ];
 
-      let response: Awaited<ReturnType<typeof ai.models.generateContent>> | null = null;
+      let stream: Awaited<ReturnType<typeof ai.models.generateContentStream>> | null = null;
       let lastError: unknown;
-      const maxAttempts = 3;
+      const maxAttempts = 2;
 
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         try {
-          response = await ai.models.generateContent({
-            model: 'gemini-4-hydrogen',
+          stream = await ai.models.generateContentStream({
+            model: 'gemini-3.1-flash-lite',
             contents,
             config: {
               systemInstruction,
-              thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
             },
           });
           break;
@@ -485,25 +475,47 @@ ${contextSummary}`;
           lastError = err;
           const info = extractGeminiErrorInfo(err);
           if (attempt < maxAttempts && isRetryableGeminiError(info)) {
-            await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
+            await new Promise((resolve) => setTimeout(resolve, 200 * attempt));
             continue;
           }
           throw err;
         }
       }
 
-      if (!response) {
+      if (!stream) {
         throw lastError ?? new Error('No response from Gemini.');
       }
 
-      const rawReply = (response.text ?? '').trim();
-      const reply = stripMarkdownAsterisks(rawReply);
-      if (!reply) {
-        res.status(502).json({ error: 'Received an empty response from Gemini. Please try again.' });
-        return;
-      }
+      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.flushHeaders();
 
-      res.json({ reply });
+      let emittedChars = 0;
+      try {
+        for await (const chunk of stream) {
+          const delta = chunk.text ?? '';
+          if (!delta) continue;
+          emittedChars += delta.length;
+          res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+        }
+
+        if (emittedChars === 0) {
+          res.write(
+            `data: ${JSON.stringify({ error: 'Received an empty response from Gemini. Please try again.' })}\n\n`
+          );
+        } else {
+          res.write('data: [DONE]\n\n');
+        }
+        res.end();
+      } catch (streamErr) {
+        console.error('Gemini /api/chat stream error:', streamErr);
+        res.write(
+          `data: ${JSON.stringify({ error: 'Connection interrupted while streaming response. Please try again.' })}\n\n`
+        );
+        res.end();
+      }
     } catch (error) {
       const info = extractGeminiErrorInfo(error);
       console.error(`Gemini /api/chat error (status=${info.status ?? 'unknown'}, apiStatus=${info.apiStatus ?? 'none'}):`, info.message);

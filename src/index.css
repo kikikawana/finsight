@@ -2,7 +2,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-display: "Playfair Display", Georgia, Cambria, serif;
+  --font-display: "Cormorant Garamond", Georgia, ui-serif, serif;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -15,90 +15,135 @@
 
   h1, h2 {
     font-family: var(--font-display);
+    letter-spacing: -0.025em;
   }
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .tabular-nums {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
-/* Vibrant yet calm layered light-mode ambient backdrop */
+/* Warm stone architectural canvas with soft radial emerald top wash */
 .finsight-ambient-bg {
-  background-color: #f6faf8;
+  background-color: #f4f3ef;
   background-image:
-    radial-gradient(ellipse 75% 55% at 10% 6%, rgba(16, 185, 129, 0.16), transparent 62%),
-    radial-gradient(ellipse 65% 50% at 90% 12%, rgba(245, 158, 11, 0.14), transparent 58%),
-    radial-gradient(ellipse 60% 45% at 50% 92%, rgba(14, 165, 233, 0.10), transparent 65%),
-    linear-gradient(to right, rgba(15, 23, 42, 0.032) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.032) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+    radial-gradient(1100px 440px at 14% -4%, rgba(5, 150, 105, 0.085), transparent 62%),
+    radial-gradient(900px 380px at 88% 0%, rgba(217, 119, 6, 0.055), transparent 60%);
 }
 
-/* Rich midnight-emerald & warm-gold dark-mode ambient backdrop */
+/* Smoked Obsidian Forest & Warm Charcoal dark mode theme */
+.dark {
+  --color-slate-950: #090d0b;
+  --color-slate-900: #111714;
+  --color-slate-800: #19221d;
+  --color-slate-700: #28362e;
+  --color-slate-600: #46574d;
+  --color-slate-500: #78887f;
+  --color-slate-400: #9aa89f;
+  --color-slate-300: #c5cec8;
+  --color-slate-200: #e2e6e1;
+  --color-slate-100: #f2f1ec;
+  --color-slate-50: #faf9f5;
+}
+
 .dark .finsight-ambient-bg {
-  background-color: #070b14;
+  background-color: #090d0b;
   background-image:
-    radial-gradient(ellipse 75% 55% at 12% 8%, rgba(16, 185, 129, 0.19), transparent 62%),
-    radial-gradient(ellipse 65% 50% at 88% 14%, rgba(245, 158, 11, 0.14), transparent 58%),
-    radial-gradient(ellipse 60% 45% at 50% 92%, rgba(56, 189, 248, 0.10), transparent 65%),
-    linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+    radial-gradient(1150px 500px at 16% -6%, rgba(16, 185, 129, 0.16), transparent 62%),
+    radial-gradient(960px 420px at 88% 0%, rgba(217, 119, 6, 0.085), transparent 58%);
 }
 
-@keyframes finsight-orb-drift {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-16px, 12px, 0) scale(1.05);
-  }
+/* Crisp elevated card surface */
+.finsight-surface {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 28px -18px rgba(15, 23, 42, 0.12);
 }
 
-@keyframes finsight-orb-drift-alt {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(18px, -14px, 0) scale(1.06);
-  }
+.dark .finsight-surface {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 18px 36px -20px rgba(0, 0, 0, 0.72);
 }
 
-.finsight-orb {
-  animation: finsight-orb-drift 15s ease-in-out infinite;
-  will-change: transform;
+/* Signature Obsidian Forest metallic card */
+.finsight-obsidian-card {
+  background-color: #091a15;
+  background-image:
+    radial-gradient(520px 260px at 92% 6%, rgba(245, 158, 11, 0.15), transparent 62%),
+    radial-gradient(480px 280px at 8% 12%, rgba(16, 185, 129, 0.19), transparent 60%),
+    linear-gradient(160deg, #0d2720 0%, #091a15 52%, #071214 100%);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.11) inset,
+    0 22px 44px -22px rgba(6, 78, 59, 0.55);
 }
 
-.finsight-orb-alt {
-  animation: finsight-orb-drift-alt 19s ease-in-out infinite;
-  will-change: transform;
+.dark .finsight-obsidian-card {
+  background-color: #0b221b;
+  background-image:
+    radial-gradient(520px 260px at 92% 6%, rgba(245, 158, 11, 0.16), transparent 62%),
+    radial-gradient(480px 280px at 8% 12%, rgba(16, 185, 129, 0.22), transparent 60%),
+    linear-gradient(160deg, #103227 0%, #0b221b 52%, #081613 100%);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 24px 48px -22px rgba(0, 0, 0, 0.85);
+}
+
+/* Tactile specular primary button */
+.finsight-btn-primary {
+  background-image: linear-gradient(180deg, #059669 0%, #047857 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.24) inset,
+    0 4px 12px -4px rgba(4, 120, 87, 0.45);
+  transition:
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 150ms ease;
+}
+
+.finsight-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 8px 18px -5px rgba(5, 150, 105, 0.5);
+  transform: translateY(-1px);
+}
+
+.finsight-btn-primary:active:not(:disabled) {
+  transform: scale(0.985);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 2px 6px -2px rgba(4, 120, 87, 0.4);
 }
 
 .finsight-card-interactive {
   transition:
-    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 200ms ease;
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .finsight-card-interactive:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px -12px rgba(6, 78, 59, 0.18);
+  border-color: rgba(5, 150, 105, 0.38);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 14px 28px -16px rgba(6, 78, 59, 0.18);
 }
 
 .dark .finsight-card-interactive:hover {
-  box-shadow: 0 16px 32px -12px rgba(16, 185, 129, 0.16);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .finsight-orb,
-  .finsight-orb-alt {
-    animation: none;
-  }
-
-  .finsight-card-interactive:hover {
-    transform: none;
-  }
+  border-color: rgba(16, 185, 129, 0.42);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 18px 34px -18px rgba(0, 0, 0, 0.72);
 }
 
 input[type="range"].finsight-range {
@@ -106,43 +151,51 @@ input[type="range"].finsight-range {
   appearance: none;
   height: 6px;
   border-radius: 9999px;
-  background: #e2e8f0;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.35), rgba(203, 213, 225, 0.85));
   outline: none;
 }
 
 .dark input[type="range"].finsight-range {
-  background: #334155;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.45), rgba(40, 54, 46, 0.95));
 }
 
 input[type="range"].finsight-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   border-radius: 9999px;
-  background: #047857;
+  background: linear-gradient(145deg, #10b981, #047857);
   border: 2px solid #ffffff;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.3);
+  box-shadow:
+    0 1px 5px rgba(15, 23, 42, 0.35),
+    0 0 0 3px rgba(16, 185, 129, 0.16);
   cursor: pointer;
-  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms ease;
+  transition:
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 150ms ease;
 }
 
 .dark input[type="range"].finsight-range::-webkit-slider-thumb {
-  background: #10b981;
-  border-color: #0f172a;
+  background: linear-gradient(145deg, #34d399, #059669);
+  border-color: #071214;
 }
 
 input[type="range"].finsight-range::-webkit-slider-thumb:hover {
   transform: scale(1.12);
-  background: #059669;
+  box-shadow:
+    0 2px 8px rgba(4, 120, 87, 0.45),
+    0 0 0 5px rgba(16, 185, 129, 0.25);
 }
 
 input[type="range"].finsight-range::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   border-radius: 9999px;
-  background: #047857;
+  background: linear-gradient(145deg, #10b981, #047857);
   border: 2px solid #ffffff;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.3);
+  box-shadow:
+    0 1px 5px rgba(15, 23, 42, 0.35),
+    0 0 0 3px rgba(16, 185, 129, 0.16);
   cursor: pointer;
 }

@@ -1,5 +1,5 @@
 import type { User } from 'firebase/auth';
-import { Award, CheckCircle2, Lock } from 'lucide-react';
+import { Award, CheckCircle2, Lock, Share2 } from 'lucide-react';
 import type { MilestoneProgress } from '../types/finance';
 import { MilestoneBadgeSvg } from './MilestoneBadgeSvg';
 
@@ -9,6 +9,7 @@ interface MilestonesSectionProps {
   earnedCount: number;
   recentUnlocks: string[];
   onSignIn: () => void;
+  onOpenShareModal?: () => void;
 }
 
 export function MilestonesSection({
@@ -17,6 +18,7 @@ export function MilestonesSection({
   earnedCount,
   recentUnlocks,
   onSignIn,
+  onOpenShareModal,
 }: MilestonesSectionProps) {
   const nextMilestone = items.find((m) => !m.unlocked) ?? null;
 
@@ -28,43 +30,52 @@ export function MilestonesSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2">
-              <Award className="w-4 h-4" aria-hidden="true" />
-              <span>Savings Milestones &amp; Achievement Badges</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 text-balance">
-              Every milestone turns small weekly habits into visible momentum.
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50 text-balance">
+              Savings Milestones
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-              Unlock visual badges automatically as your logged deposits pass peso thresholds,
-              weekly consistency streaks, and down payment goals.
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1.5">
+              Unlock badges automatically as your logged deposits pass peso thresholds,
+              weekly consistency streaks, and 25%, 50%, and 100% of your active goal.
             </p>
           </div>
 
-          {/* Summary Progress Counter */}
-          <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 flex items-center gap-5 shrink-0 shadow-xs">
-            <div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">Badges Earned</div>
-              <div className="text-2xl font-mono font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-0.5">
-                {earnedCount}{' '}
-                <span className="text-sm font-normal text-slate-400 dark:text-slate-500">
-                  / {items.length}
-                </span>
-              </div>
-            </div>
-            {nextMilestone && (
-              <div className="pl-5 border-l border-slate-200 dark:border-slate-800 max-w-[220px]">
-                <div className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                  Next Badge Up
-                </div>
-                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate mt-0.5">
-                  {nextMilestone.definition.title}
-                </div>
-                <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums mt-0.5">
-                  {nextMilestone.progressText}
-                </div>
-              </div>
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {onOpenShareModal && (
+              <button
+                type="button"
+                onClick={onOpenShareModal}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Share Showcase Link</span>
+              </button>
             )}
+
+            {/* Summary Progress Counter */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-5 py-4 flex items-center gap-5 shrink-0">
+              <div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Badges Earned</div>
+                <div className="text-2xl font-mono font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-0.5">
+                  {earnedCount}{' '}
+                  <span className="text-sm font-normal text-slate-400 dark:text-slate-500">
+                    / {items.length}
+                  </span>
+                </div>
+              </div>
+              {nextMilestone && (
+                <div className="pl-5 border-l border-slate-200 dark:border-slate-800 max-w-[220px]">
+                  <div className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                    Next Badge Up
+                  </div>
+                  <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate mt-0.5">
+                    {nextMilestone.definition.title}
+                  </div>
+                  <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums mt-0.5">
+                    {nextMilestone.progressText}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -106,18 +117,12 @@ export function MilestonesSection({
             return (
               <div
                 key={definition.id}
-                className={`finsight-card-interactive relative overflow-hidden rounded-2xl border p-5 flex flex-col justify-between ${
+                className={`finsight-card-interactive rounded-2xl border p-5 flex flex-col justify-between ${
                   unlocked
-                    ? 'bg-white/95 dark:bg-slate-900/95 border-emerald-300 dark:border-emerald-700/80 shadow-xs'
-                    : 'bg-white/75 dark:bg-slate-900/65 border-slate-200 dark:border-slate-800'
+                    ? 'bg-white dark:bg-slate-900 border-emerald-400 dark:border-emerald-600 shadow-xs'
+                    : 'bg-white/80 dark:bg-slate-900/70 border-slate-200 dark:border-slate-800'
                 }`}
               >
-                {unlocked && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-amber-400 to-teal-400"
-                  />
-                )}
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <MilestoneBadgeSvg
@@ -182,7 +187,7 @@ export function MilestonesSection({
                     <div
                       className={`h-full transition-all duration-300 ${
                         unlocked
-                          ? 'bg-gradient-to-r from-emerald-600 to-teal-500'
+                          ? 'bg-emerald-600 dark:bg-emerald-500'
                           : 'bg-amber-500 dark:bg-amber-400'
                       }`}
                       style={{ width: `${progressPct}%` }}

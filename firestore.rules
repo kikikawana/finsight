@@ -44,35 +44,53 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
+    function isValidFolder(data) {
+      return data.keys().hasAll(['userId', 'name', 'color', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['userId', 'name', 'color', 'createdAt', 'updatedAt'])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 48
+        && data.color is string && data.color in ['emerald', 'amber', 'sky', 'rose', 'slate']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
     function isValidScenario(data) {
       return data.keys().hasAll([
-          'userId', 'title', 'weeklySavings', 'initialDeposit', 'benchmarkId',
-          'monthlyRent', 'targetHomePrice', 'downPaymentPercent',
-          'mortgageRate', 'rentGrowthRate', 'createdAt', 'updatedAt'
+          'userId', 'title', 'goalCategory', 'goalTargetAmount',
+          'incomeAmount', 'incomeCadence', 'savingsPercent',
+          'needsPercent', 'wantsPercent', 'weeklySavings',
+          'initialDeposit', 'benchmarkId', 'createdAt', 'updatedAt'
         ])
         && data.keys().hasOnly([
-          'userId', 'title', 'weeklySavings', 'initialDeposit', 'benchmarkId',
-          'monthlyRent', 'targetHomePrice', 'downPaymentPercent',
-          'mortgageRate', 'rentGrowthRate', 'createdAt', 'updatedAt'
+          'userId', 'title', 'goalCategory', 'goalTargetAmount',
+          'incomeAmount', 'incomeCadence', 'savingsPercent',
+          'needsPercent', 'wantsPercent', 'weeklySavings',
+          'initialDeposit', 'benchmarkId', 'folderId', 'createdAt', 'updatedAt'
         ])
         && isValidId(data.userId)
         && data.userId == request.auth.uid
         && data.title is string && data.title.size() >= 1 && data.title.size() <= 80
+        && data.goalCategory is string
+        && data.goalCategory in ['motorcycle', 'student', 'emergency', 'gadget', 'business', 'travel', 'custom']
+        && (data.goalTargetAmount is int || data.goalTargetAmount is float)
+        && data.goalTargetAmount >= 500 && data.goalTargetAmount <= 500000000
+        && (data.incomeAmount is int || data.incomeAmount is float)
+        && data.incomeAmount >= 0 && data.incomeAmount <= 100000000
+        && data.incomeCadence is string && data.incomeCadence in ['weekly', 'monthly']
+        && (data.savingsPercent is int || data.savingsPercent is float)
+        && data.savingsPercent >= 1 && data.savingsPercent <= 95
+        && (data.needsPercent is int || data.needsPercent is float)
+        && data.needsPercent >= 0 && data.needsPercent <= 99
+        && (data.wantsPercent is int || data.wantsPercent is float)
+        && data.wantsPercent >= 0 && data.wantsPercent <= 99
+        && (data.savingsPercent + data.needsPercent + data.wantsPercent) <= 100
         && (data.weeklySavings is int || data.weeklySavings is float)
         && data.weeklySavings >= 1 && data.weeklySavings <= 1000000
         && (data.initialDeposit is int || data.initialDeposit is float)
         && data.initialDeposit >= 0 && data.initialDeposit <= 100000000
         && data.benchmarkId is string && data.benchmarkId in ['sp500', 'psei', 'global60_40']
-        && (data.monthlyRent is int || data.monthlyRent is float)
-        && data.monthlyRent >= 0 && data.monthlyRent <= 10000000
-        && (data.targetHomePrice is int || data.targetHomePrice is float)
-        && data.targetHomePrice >= 100000 && data.targetHomePrice <= 500000000
-        && (data.downPaymentPercent is int || data.downPaymentPercent is float)
-        && data.downPaymentPercent >= 5 && data.downPaymentPercent <= 50
-        && (data.mortgageRate is int || data.mortgageRate is float)
-        && data.mortgageRate >= 1 && data.mortgageRate <= 25
-        && (data.rentGrowthRate is int || data.rentGrowthRate is float)
-        && data.rentGrowthRate >= 0 && data.rentGrowthRate <= 15
+        && (!('folderId' in data) || isValidId(data.folderId))
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
     }
@@ -113,6 +131,75 @@ service cloud.firestore {
         && data.createdAt is timestamp;
     }
 
+    function isValidSharedReport(data) {
+      return data.keys().hasAll([
+          'userId', 'authorName', 'goalTitle', 'goalCategory',
+          'goalTargetAmount', 'currentSaved', 'weeklySavings', 'savingsPercent',
+          'currency', 'benchmarkId', 'earnedBadgesCount', 'totalBadgesCount',
+          'unlockedMilestoneIds', 'depositsCount', 'showExactAmounts',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'authorName', 'goalTitle', 'goalCategory',
+          'goalTargetAmount', 'currentSaved', 'weeklySavings', 'savingsPercent',
+          'currency', 'benchmarkId', 'earnedBadgesCount', 'totalBadgesCount',
+          'unlockedMilestoneIds', 'depositsCount', 'showExactAmounts',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 48
+        && data.goalTitle is string && data.goalTitle.size() >= 1 && data.goalTitle.size() <= 80
+        && data.goalCategory is string
+        && data.goalCategory in ['motorcycle', 'student', 'emergency', 'gadget', 'business', 'travel', 'custom']
+        && (data.goalTargetAmount is int || data.goalTargetAmount is float)
+        && data.goalTargetAmount >= 500 && data.goalTargetAmount <= 500000000
+        && (data.currentSaved is int || data.currentSaved is float)
+        && data.currentSaved >= 0 && data.currentSaved <= 500000000
+        && (data.weeklySavings is int || data.weeklySavings is float)
+        && data.weeklySavings >= 1 && data.weeklySavings <= 1000000
+        && (data.savingsPercent is int || data.savingsPercent is float)
+        && data.savingsPercent >= 1 && data.savingsPercent <= 95
+        && data.currency is string && data.currency in ['PHP', 'USD', 'SGD']
+        && data.benchmarkId is string && data.benchmarkId in ['sp500', 'psei', 'global60_40']
+        && (data.earnedBadgesCount is int || data.earnedBadgesCount is float)
+        && data.earnedBadgesCount >= 0 && data.earnedBadgesCount <= 16
+        && (data.totalBadgesCount is int || data.totalBadgesCount is float)
+        && data.totalBadgesCount >= 1 && data.totalBadgesCount <= 16
+        && data.unlockedMilestoneIds is list
+        && data.unlockedMilestoneIds.size() <= 8
+        && (data.unlockedMilestoneIds.size() == 0 || (data.unlockedMilestoneIds[0] is string && data.unlockedMilestoneIds[0].size() <= 40))
+        && (data.depositsCount is int || data.depositsCount is float)
+        && data.depositsCount >= 0 && data.depositsCount <= 10000
+        && data.showExactAmounts is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBudgetEntry(data) {
+      return data.keys().hasAll([
+          'userId', 'title', 'amount', 'bucket', 'category',
+          'status', 'entryDate', 'isEssentialRoutine', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'title', 'amount', 'bucket', 'category',
+          'status', 'entryDate', 'isEssentialRoutine', 'scenarioId', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 64
+        && (data.amount is int || data.amount is float)
+        && data.amount >= 1 && data.amount <= 1000000
+        && data.bucket is string && data.bucket in ['needs', 'wants']
+        && data.category is string && data.category in ['food', 'commute', 'bills', 'groceries', 'coffee', 'personal', 'other']
+        && data.status is string && data.status in ['planned', 'spent', 'swept']
+        && data.entryDate is string && data.entryDate.size() == 10 && data.entryDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.isEssentialRoutine is bool
+        && (!('scenarioId' in data) || isValidId(data.scenarioId))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
     // Users Collection (PII strictly isolated to owner)
     match /users/{userId} {
       allow get: if isValidId(userId) && isOwner(userId);
@@ -134,6 +221,26 @@ service cloud.firestore {
       allow delete: if isVerifiedUser() && isValidId(userId) && isOwner(userId);
     }
 
+    // Goal Folders Collection
+    match /folders/{folderId} {
+      allow get: if isValidId(folderId) && isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(folderId)
+        && isValidFolder(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(folderId)
+        && existing().userId == request.auth.uid
+        && isValidFolder(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'color', 'updatedAt']);
+      allow delete: if isVerifiedUser() && isValidId(folderId) && existing().userId == request.auth.uid;
+    }
+
     // Savings Scenarios Collection
     match /scenarios/{scenarioId} {
       allow get: if isValidId(scenarioId) && isSignedIn() && existing().userId == request.auth.uid;
@@ -142,7 +249,11 @@ service cloud.firestore {
         && isValidId(scenarioId)
         && isValidScenario(incoming())
         && incoming().createdAt == request.time
-        && incoming().updatedAt == request.time;
+        && incoming().updatedAt == request.time
+        && (!('folderId' in incoming()) || (
+          exists(/databases/$(database)/documents/folders/$(incoming().folderId))
+          && get(/databases/$(database)/documents/folders/$(incoming().folderId)).data.userId == request.auth.uid
+        ));
       allow update: if isVerifiedUser()
         && isValidId(scenarioId)
         && existing().userId == request.auth.uid
@@ -151,10 +262,14 @@ service cloud.firestore {
         && incoming().createdAt == existing().createdAt
         && incoming().updatedAt == request.time
         && incoming().diff(existing()).affectedKeys().hasOnly([
-          'title', 'weeklySavings', 'initialDeposit', 'benchmarkId',
-          'monthlyRent', 'targetHomePrice', 'downPaymentPercent',
-          'mortgageRate', 'rentGrowthRate', 'updatedAt'
-        ]);
+          'title', 'goalCategory', 'goalTargetAmount', 'incomeAmount',
+          'incomeCadence', 'savingsPercent', 'needsPercent', 'wantsPercent',
+          'weeklySavings', 'initialDeposit', 'benchmarkId', 'folderId', 'updatedAt'
+        ])
+        && (!('folderId' in incoming()) || (
+          exists(/databases/$(database)/documents/folders/$(incoming().folderId))
+          && get(/databases/$(database)/documents/folders/$(incoming().folderId)).data.userId == request.auth.uid
+        ));
       allow delete: if isVerifiedUser() && isValidId(scenarioId) && existing().userId == request.auth.uid;
     }
 
@@ -182,6 +297,63 @@ service cloud.firestore {
         && incoming().createdAt == request.time;
       allow update: if false;
       allow delete: if isVerifiedUser() && isValidId(awardId) && existing().userId == request.auth.uid;
+    }
+
+    // Public Shared Progress Reports (read by unguessable ID; list & write strictly owner-only)
+    match /sharedReports/{shareId} {
+      allow get: if isValidId(shareId) && shareId.size() >= 16;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(shareId)
+        && shareId.size() >= 16
+        && isValidSharedReport(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(shareId)
+        && existing().userId == request.auth.uid
+        && isValidSharedReport(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'authorName', 'goalTitle', 'goalCategory',
+          'goalTargetAmount', 'currentSaved', 'weeklySavings', 'savingsPercent',
+          'currency', 'benchmarkId', 'earnedBadgesCount', 'totalBadgesCount',
+          'unlockedMilestoneIds', 'depositsCount', 'showExactAmounts', 'updatedAt'
+        ]);
+      allow delete: if isVerifiedUser() && isValidId(shareId) && existing().userId == request.auth.uid;
+    }
+
+    // Everyday Budget Entries Collection
+    match /budgetEntries/{entryId} {
+      allow get: if isValidId(entryId) && isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(entryId)
+        && isValidBudgetEntry(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (!('scenarioId' in incoming()) || (
+          exists(/databases/$(database)/documents/scenarios/$(incoming().scenarioId))
+          && get(/databases/$(database)/documents/scenarios/$(incoming().scenarioId)).data.userId == request.auth.uid
+        ));
+      allow update: if isVerifiedUser()
+        && isValidId(entryId)
+        && existing().userId == request.auth.uid
+        && isValidBudgetEntry(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'amount', 'bucket', 'category', 'status',
+          'entryDate', 'isEssentialRoutine', 'scenarioId', 'updatedAt'
+        ])
+        && (!('scenarioId' in incoming()) || (
+          exists(/databases/$(database)/documents/scenarios/$(incoming().scenarioId))
+          && get(/databases/$(database)/documents/scenarios/$(incoming().scenarioId)).data.userId == request.auth.uid
+        ));
+      allow delete: if isVerifiedUser() && isValidId(entryId) && existing().userId == request.auth.uid;
     }
   }
 }

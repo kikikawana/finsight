@@ -45,8 +45,8 @@ export function HistoricalDataSection({
               <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
               <span>Verified 20-Year Historical Return Ledger (2005–2024)</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-              Real market returns—crash years included.
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+              Real market returns, including crash years.
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
               {dataset.dataSource}. Weekly investing buys more shares during downturns like 2008 and
@@ -81,7 +81,7 @@ export function HistoricalDataSection({
 
         {/* Annual Return Bar Chart + Year-by-Year Ledger */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-6 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs">
+          <div className="lg:col-span-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Calendar-Year Total Returns ({dataset.shortName})
@@ -141,7 +141,7 @@ export function HistoricalDataSection({
             </div>
           </div>
 
-          <div className="lg:col-span-6 bg-white/95 dark:bg-slate-900/90 backdrop-blur-xs border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+          <div className="lg:col-span-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Year-by-Year Replay at {formatPeso(weeklySavings)}/week
